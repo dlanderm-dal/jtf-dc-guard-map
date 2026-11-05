@@ -5,27 +5,48 @@ map of National Guard personnel deployed to Washington, D.C.
 
 **Live:** https://dlanderm-dal.github.io/jtf-dc-guard-map/
 
+Companion to Flourish visualisation `30816616`.
+
 ## What it does
 
-Drag any number to move it. A dashed outline marks where it started. Arrow keys
-nudge one pixel; Shift+arrow moves ten.
+Drag any number to move it. A dashed outline marks where it started and a line
+connects the two. Arrow keys nudge one pixel; Shift+arrow moves ten.
 
-- **Copy changes** — puts the moved labels on your clipboard as `Name: lat, lon`
-- **Copy full CSV** — the complete positions file, ready to upload to Flourish
-- **Reset all** — back to the computed starting points
+- **Copy changes** — the moved labels as `Name: new_lat, new_lon (Δlat, Δlon)`
+- **Copy full CSV** — the complete positions file, ready to paste straight into
+  the Flourish Points sheet. Its columns and starting coordinates already match
+  that sheet, so nothing has to be recombined by hand.
+- **Reset all** — back to the starting points
 
-Output is latitude and longitude, so it is projection-independent: a number
-placed inside Florida here lands inside Florida on the Flourish map.
+## Why it matches the Flourish map
 
-## Starting positions
+A dragged position is only meaningful if this map starts from the same baseline
+as the Flourish one, so both halves of that baseline are taken from the live
+visualisation rather than rebuilt:
 
-Each state's default is its *pole of inaccessibility* — the point furthest from
-any of that state's borders. That beats a centroid, which falls in open water on
-L-shaped states like Florida and Louisiana.
+**Projection.** The embed reports `projection: "Albers USA"`, `fit: "map"`,
+`zoom: 1`, no padding. That is a composite — Alaska scaled and tucked under the
+southwest, Puerto Rico moved up beside Florida — not a plain Albers. Stock
+`d3.geoAlbersUsa` has no Puerto Rico lobe and returns `null` there, so a fourth
+lobe is added; the rest are d3's own constants.
 
-D.C. and the U.S. Virgin Islands are drawn as inset boxes in the Atlantic,
-matching the boxes in the Flourish geometry. Alaska and Puerto Rico get their
-own panels, since they do not fit the main map at true scale.
+**Geometry.** The 53 region outlines are the visualisation's own
+`regions_geometry` sheet, not a generic US atlas, so the shapes, the D.C. inset
+box and the U.S. Virgin Islands box are identical in both places.
+
+Output is latitude and longitude, so a number placed inside Florida here lands
+inside Florida on the Flourish map.
+
+## Two things to know
+
+- **Keep the D.C. and U.S. Virgin Islands numbers inside their boxes.** Those
+  two are inset boxes in the open Atlantic, not real locations. A label dragged
+  outside its box gets a coordinate in open ocean, and Flourish will plot it
+  there.
+- **Puerto Rico's placement is calibrated, not read from Flourish.** Flourish
+  draws to canvas and does not expose its projection, so the Puerto Rico lobe
+  was fitted by measuring the rendered map. It is within a few pixels, which is
+  fine for placing a label, but it is the one part not derived exactly.
 
 ## Status
 
@@ -35,5 +56,5 @@ the outstanding sourcing questions.
 
 ## Built with
 
-d3 v7 and topojson-client, both bundled into `index.html` so the page needs no
-network at all. State outlines from the US Census via `us-atlas`.
+d3 v7, bundled inline. The page needs no network and no server — though opening
+it from GitHub Pages is the easy route.
