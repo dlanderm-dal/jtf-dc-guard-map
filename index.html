@@ -22,11 +22,13 @@
  svg{display:block;width:100%;height:auto;border:1px solid var(--rule);border-radius:6px;background:#fff;touch-action:none}
  .state{stroke:#fff;stroke-width:.7}
  .lbl{cursor:grab;user-select:none} .lbl.dragging{cursor:grabbing}
- .lbl rect{fill:#fff;fill-opacity:.82;stroke:var(--ink);stroke-width:0;rx:3}
- .lbl:hover rect{stroke-width:1.2}
- .lbl.moved rect{stroke:var(--orange);stroke-width:1.6;fill-opacity:.9}
- .lbl text{font:700 12px var(--poppins);text-anchor:middle;dominant-baseline:central;
-           paint-order:stroke;stroke:#fff;stroke-width:2.5px;stroke-linejoin:round}
+ /* Flourish draws these as plain black text: point_label_outline_color is null,
+    so no halo, and the template has no background plate. The rect here is only
+    a drag target, so it stays invisible until you touch it. */
+ .lbl rect{fill:transparent;stroke:var(--orange);stroke-width:0;rx:2}
+ .lbl:hover rect{stroke-width:1;stroke-dasharray:2 2}
+ .lbl.moved rect{stroke:var(--orange);stroke-width:1.2}
+ .lbl text{font:400 12.8px var(--poppins);text-anchor:start;dominant-baseline:middle;fill:#000}
  .ghost{fill:none;stroke:var(--orange);stroke-width:1.2;stroke-dasharray:2 2;pointer-events:none}
  .leader{stroke:var(--orange);stroke-width:1;stroke-dasharray:2 2;pointer-events:none}
  .panel-label{font:600 9px var(--poppins);fill:var(--grey);letter-spacing:.09em;text-transform:uppercase}
@@ -128,11 +130,11 @@ function albersUsaPr(){
     const k = lower48.scale(), x = +_[0], y = +_[1];
     l48p = lower48.translate(_)
       .clipExtent([[x-0.455*k,y-0.238*k],[x+0.455*k,y+0.238*k]]).stream(pointStream);
-    akp = alaska.translate([x-0.3044*k, y+0.2000*k])
+    akp = alaska.translate([x-0.3070*k, y+0.2010*k])
       .clipExtent([[x-0.425*k+eps,y+0.120*k+eps],[x-0.214*k-eps,y+0.234*k-eps]]).stream(pointStream);
     hip = hawaii.translate([x-0.205*k, y+0.212*k])
       .clipExtent([[x-0.214*k+eps,y+0.166*k+eps],[x-0.115*k-eps,y+0.234*k-eps]]).stream(pointStream);
-    prp = pr.translate([x+0.3510*k, y+0.2228*k])
+    prp = pr.translate([x+0.3500*k, y+0.2243*k])
       .clipExtent([[x+0.3100*k+eps,y+0.1990*k+eps],[x+0.3920*k-eps,y+0.2460*k-eps]]).stream(pointStream);
     cache = cacheStream = null;
     return p;
@@ -151,6 +153,10 @@ function albersUsaPr(){
    zero shift: 99.4%. Expressed against a 1076-wide viewBox so the SVG stays
    responsive without moving anything. */
 const MAPW = 1076;
+/* Measured off the live canvas at this frame width: the label's x offset grows
+   3.79 per digit with a 1.5 intercept, which is a left-aligned label, not a
+   centred one. GAP is the dot-to-text gap; CHARW the per-digit advance. */
+const GAP = 2.0, CHARW = 7.57, CHARH = 15;
 function flourishFit(proj){
   proj.scale(1.14906 * MAPW);
   proj.translate([0.53157 * MAPW, 0.27374 * MAPW]);
@@ -182,11 +188,19 @@ function boot(){
       .attr("transform",`translate(${start[0]},${start[1]})`)
       .attr("tabindex",0).attr("role","button")
       .attr("aria-label",`${d.name}, ${d.n} personnel. Drag to reposition.`);
-    const txt=String(d.n), w=Math.max(20,txt.length*9+10), h=17;
-    g.append("rect").attr("x",-w/2).attr("y",-h/2).attr("width",w).attr("height",h);
-    g.append("text").text(txt);
+    /* Flourish positions a point label from the point marker, not centred on it:
+       text_align "left", text_baseline "middle", drawn at
+       x + (radius + 0.5*point_stroke_width)*scaling + x_padding.
+       Here radius is 0 (point_circle_default_radius), so the number starts
+       GAP to the right of the dot and is centred on it vertically. The dot is
+       never drawn. Keeping the group's transform ON the dot means a drag moves
+       the dot, so invert() returns the coordinate the Points sheet wants. */
+    const txt=String(d.n), h=CHARH;
+    const w=txt.length*CHARW;
+    g.append("rect").attr("x",GAP-1).attr("y",-h/2).attr("width",w+2).attr("height",h);
+    g.append("text").attr("x",GAP).attr("y",0).text(txt);
     g.append("title").text(`${d.name} — ${d.n}`);
-    gh.attr("x",start[0]-w/2).attr("y",start[1]-h/2).attr("width",w).attr("height",h);
+    gh.attr("x",start[0]+GAP-1).attr("y",start[1]-h/2).attr("width",w+2).attr("height",h);
 
     function settle(sx,sy){
       const ll = PROJ.invert([sx,sy]); if(!ll || isNaN(ll[0])) return;
