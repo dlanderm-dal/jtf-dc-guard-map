@@ -28,6 +28,9 @@
  .lbl rect{fill:transparent;stroke:var(--orange);stroke-width:0;rx:2}
  .lbl:hover rect{stroke-width:1;stroke-dasharray:2 2}
  .lbl.moved rect{stroke:var(--orange);stroke-width:1.2}
+ .lbl.note text{fill:#111}
+ .lbl.note rect{stroke:#8a8a8a;stroke-width:0;stroke-dasharray:2 2}
+ .lbl.note:hover rect{stroke-width:1}
  .lbl text{font:400 12.8px var(--poppins);text-anchor:start;dominant-baseline:middle;fill:#000}
  .ghost{fill:none;stroke:var(--orange);stroke-width:1.2;stroke-dasharray:2 2;pointer-events:none}
  .leader{stroke:var(--orange);stroke-width:1;stroke-dasharray:2 2;pointer-events:none}
@@ -48,6 +51,7 @@
  <div class="bar">
   <button class="primary" id="copy">Copy changes</button>
   <button class="ghostbtn" id="copycsv">Copy full CSV</button>
+  <button class="ghostbtn" id="addnote">+ Annotation</button>
   <button class="ghostbtn" id="reset">Reset all</button>
   <span class="count" id="count">nothing moved yet</span>
  </div>
@@ -56,7 +60,9 @@
  <textarea id="out" readonly placeholder="Drag a number, then hit Copy changes. The text appears here too."></textarea>
  <p class="hint">Drag any number to move it. A dashed outline marks where it started and a line connects
   the two. Arrow keys nudge one pixel, Shift+arrow moves ten. <code>Copy changes</code> puts just the
-  moved ones on your clipboard &mdash; paste that back into the chat.</p>
+  moved ones on your clipboard &mdash; paste that back into the chat.
+  <br><code>+ Annotation</code> drops a piece of text on the map; drag it where you want it. Select one
+  and press Delete to remove it. Annotations come out in the CSV as extra Points rows.</p>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -67,7 +73,7 @@
 
 </script>
 <script>
-const DATA = {"labels":[{"name":"Washington, D.C.","lat":37.725,"lon":-73.4098,"n":760,"color":"#f2b90f"},{"name":"Georgia","lat":32.1384,"lon":-83.1005,"n":514,"color":"#135ae1"},{"name":"Mississippi","lat":33.4326,"lon":-89.6869,"n":349,"color":"#de2c35"},{"name":"Florida","lat":27.4034,"lon":-81.4145,"n":326,"color":"#de2c35"},{"name":"West Virginia","lat":38.2512,"lon":-81.1606,"n":256,"color":"#de2c35"},{"name":"Louisiana","lat":31.9583,"lon":-92.6226,"n":213,"color":"#de2c35"},{"name":"Arkansas","lat":34.9334,"lon":-92.5683,"n":183,"color":"#e54a52"},{"name":"Puerto Rico","lat":18.2283,"lon":-66.8835,"n":153,"color":"#f4c42c"},{"name":"Iowa","lat":42.041,"lon":-94.1195,"n":110,"color":"#3b77e6"},{"name":"Oklahoma","lat":35.4434,"lon":-96.3516,"n":62,"color":"#ec7178"},{"name":"Alaska","lat":65.7905,"lon":-151.6565,"n":34,"color":"#f9e095"},{"name":"Montana","lat":47.0059,"lon":-109.4983,"n":33,"color":"#f5a8ad"},{"name":"South Carolina","lat":33.742,"lon":-80.5409,"n":29,"color":"#f5a8ad"},{"name":"Idaho","lat":43.5595,"lon":-114.8075,"n":27,"color":"#f5a8ad"},{"name":"Indiana","lat":39.7639,"lon":-86.1712,"n":26,"color":"#f5a8ad"},{"name":"Virgin Islands","lat":37.725,"lon":-71.4795,"n":8,"color":"#fcefc0"},{"name":"Nebraska","lat":41.5004,"lon":-99.1129,"n":4,"color":"#fbdcde"},{"name":"Wyoming","lat":43.0011,"lon":-108.0322,"n":4,"color":"#fbdcde"},{"name":"Ohio","lat":40.1097,"lon":-83.0606,"n":2,"color":"#d6e4fb"},{"name":"Alabama","lat":32.4009,"lon":-86.7499,"n":1,"color":"#fbdcde"},{"name":"Nevada","lat":39.7736,"lon":-116.8676,"n":1,"color":"#d6e4fb"},{"name":"Tennessee","lat":35.8195,"lon":-86.7093,"n":1,"color":"#fbdcde"},{"name":"Texas","lat":30.928,"lon":-98.0411,"n":1,"color":"#d6e4fb"}],"fills":{"Washington, D.C.":"#f2b90f","Georgia":"#135ae1","Mississippi":"#de2c35","Florida":"#de2c35","West Virginia":"#de2c35","Louisiana":"#de2c35","Arkansas":"#e54a52","Puerto Rico":"#f4c42c","Iowa":"#3b77e6","Oklahoma":"#ec7178","Alaska":"#f9e095","Montana":"#f5a8ad","South Carolina":"#f5a8ad","Idaho":"#f5a8ad","Indiana":"#f5a8ad","Virgin Islands":"#fcefc0","Nebraska":"#fbdcde","Wyoming":"#fbdcde","Ohio":"#d6e4fb","Alabama":"#fbdcde","Nevada":"#d6e4fb","Tennessee":"#fbdcde","Texas":"#d6e4fb","Arizona":"#f4f2ef","California":"#f4f2ef","Colorado":"#f4f2ef","Connecticut":"#f4f2ef","Delaware":"#f4f2ef","Hawaii":"#f4f2ef","Illinois":"#f4f2ef","Kansas":"#f4f2ef","Kentucky":"#f4f2ef","Maine":"#f4f2ef","Maryland":"#f4f2ef","Massachusetts":"#f4f2ef","Michigan":"#f4f2ef","Minnesota":"#f4f2ef","Missouri":"#f4f2ef","New Hampshire":"#f4f2ef","New Jersey":"#f4f2ef","New Mexico":"#f4f2ef","New York":"#f4f2ef","North Carolina":"#f4f2ef","North Dakota":"#f4f2ef","Oregon":"#f4f2ef","Pennsylvania":"#f4f2ef","Rhode Island":"#f4f2ef","South Dakota":"#f4f2ef","Utah":"#f4f2ef","Vermont":"#f4f2ef","Virginia":"#f4f2ef","Washington":"#f4f2ef","Wisconsin":"#f4f2ef"}};
+const DATA = {"labels":[{"name":"Washington, D.C.","lat":36.3061,"lon":-74.354,"n":760,"color":"#f2b90f"},{"name":"Georgia","lat":32.9179,"lon":-84.3115,"n":514,"color":"#135ae1"},{"name":"Mississippi","lat":32.7709,"lon":-90.4931,"n":349,"color":"#de2c35"},{"name":"Florida","lat":28.2571,"lon":-82.514,"n":326,"color":"#de2c35"},{"name":"West Virginia","lat":38.6853,"lon":-81.7205,"n":256,"color":"#de2c35"},{"name":"Louisiana","lat":31.1261,"lon":-93.2784,"n":213,"color":"#de2c35"},{"name":"Arkansas","lat":34.9334,"lon":-92.5683,"n":183,"color":"#e54a52"},{"name":"Puerto Rico","lat":18.1651,"lon":-64.898,"n":153,"color":"#f4c42c"},{"name":"Iowa","lat":42.041,"lon":-94.1195,"n":110,"color":"#3b77e6"},{"name":"Oklahoma","lat":35.4434,"lon":-96.3516,"n":62,"color":"#ec7178"},{"name":"Alaska","lat":64.5391,"lon":-155.8371,"n":34,"color":"#f9e095"},{"name":"Montana","lat":46.7324,"lon":-110.0637,"n":33,"color":"#f5a8ad"},{"name":"South Carolina","lat":33.8691,"lon":-81.484,"n":29,"color":"#f5a8ad"},{"name":"Idaho","lat":43.7543,"lon":-115.0726,"n":27,"color":"#f5a8ad"},{"name":"Indiana","lat":39.7639,"lon":-86.1712,"n":26,"color":"#f5a8ad"},{"name":"Virgin Islands","lat":36.1974,"lon":-71.733,"n":8,"color":"#fcefc0"},{"name":"Nebraska","lat":41.4011,"lon":-99.8874,"n":4,"color":"#fbdcde"},{"name":"Wyoming","lat":42.7627,"lon":-107.738,"n":4,"color":"#fbdcde"},{"name":"Ohio","lat":40.1097,"lon":-83.0606,"n":2,"color":"#d6e4fb"},{"name":"Alabama","lat":32.8642,"lon":-87.1177,"n":1,"color":"#fbdcde"},{"name":"Nevada","lat":39.2879,"lon":-117.1497,"n":1,"color":"#d6e4fb"},{"name":"Tennessee","lat":35.8195,"lon":-86.7093,"n":1,"color":"#fbdcde"},{"name":"Texas","lat":31.5487,"lon":-99.2535,"n":1,"color":"#d6e4fb"}],"fills":{"Washington, D.C.":"#f2b90f","Georgia":"#135ae1","Mississippi":"#de2c35","Florida":"#de2c35","West Virginia":"#de2c35","Louisiana":"#de2c35","Arkansas":"#e54a52","Puerto Rico":"#f4c42c","Iowa":"#3b77e6","Oklahoma":"#ec7178","Alaska":"#f9e095","Montana":"#f5a8ad","South Carolina":"#f5a8ad","Idaho":"#f5a8ad","Indiana":"#f5a8ad","Virgin Islands":"#fcefc0","Nebraska":"#fbdcde","Wyoming":"#fbdcde","Ohio":"#d6e4fb","Alabama":"#fbdcde","Nevada":"#d6e4fb","Tennessee":"#fbdcde","Texas":"#d6e4fb","Arizona":"#f4f2ef","California":"#f4f2ef","Colorado":"#f4f2ef","Connecticut":"#f4f2ef","Delaware":"#f4f2ef","Hawaii":"#f4f2ef","Illinois":"#f4f2ef","Kansas":"#f4f2ef","Kentucky":"#f4f2ef","Maine":"#f4f2ef","Maryland":"#f4f2ef","Massachusetts":"#f4f2ef","Michigan":"#f4f2ef","Minnesota":"#f4f2ef","Missouri":"#f4f2ef","New Hampshire":"#f4f2ef","New Jersey":"#f4f2ef","New Mexico":"#f4f2ef","New York":"#f4f2ef","North Carolina":"#f4f2ef","North Dakota":"#f4f2ef","Oregon":"#f4f2ef","Pennsylvania":"#f4f2ef","Rhode Island":"#f4f2ef","South Dakota":"#f4f2ef","Utah":"#f4f2ef","Vermont":"#f4f2ef","Virginia":"#f4f2ef","Washington":"#f4f2ef","Wisconsin":"#f4f2ef"}};
 
 const POSTAL = {"AL":"Alabama","AK":"Alaska","AZ":"Arizona","AR":"Arkansas","CA":"California","CO":"Colorado","CT":"Connecticut","DE":"Delaware","DC":"Washington, D.C.","FL":"Florida","GA":"Georgia","HI":"Hawaii","ID":"Idaho","IL":"Illinois","IN":"Indiana","IA":"Iowa","KS":"Kansas","KY":"Kentucky","LA":"Louisiana","ME":"Maine","MD":"Maryland","MA":"Massachusetts","MI":"Michigan","MN":"Minnesota","MS":"Mississippi","MO":"Missouri","MT":"Montana","NE":"Nebraska","NV":"Nevada","NH":"New Hampshire","NJ":"New Jersey","NM":"New Mexico","NY":"New York","NC":"North Carolina","ND":"North Dakota","OH":"Ohio","OK":"Oklahoma","OR":"Oregon","PA":"Pennsylvania","PR":"Puerto Rico","RI":"Rhode Island","SC":"South Carolina","SD":"South Dakota","TN":"Tennessee","TX":"Texas","UT":"Utah","VT":"Vermont","VA":"Virginia","VI":"Virgin Islands","WA":"Washington","WV":"West Virginia","WI":"Wisconsin","WY":"Wyoming"};
 const svg = d3.select("#map");
@@ -163,6 +169,100 @@ function flourishFit(proj){
   return proj;
 }
 
+let LAYER = null, noteSeq = 0;
+
+/* One code path for the data labels and for annotations. `d` is
+   {key, text, lat, lon, title}. The group's transform is the (invisible) dot;
+   the text hangs off it by GAP, the way Flourish draws a point label. */
+function makeLabel(d, isNote){
+  const key = d.key || d.name;
+  const txt = String(isNote ? d.text : d.n);
+  const start = PROJ([d.lon, d.lat]);
+  if(!start){ console.warn("off-projection:", key); return null; }
+
+  state[key] = {lat:d.lat, lon:d.lon, orig:{lat:d.lat, lon:d.lon}, note:!!isNote, text:txt};
+
+  const gh = LAYER.append("rect").attr("class","ghost").attr("rx",3).style("display","none");
+  const ln = LAYER.append("line").attr("class","leader").style("display","none");
+  const g  = LAYER.append("g").attr("class","lbl"+(isNote?" note":""))
+    .attr("transform",`translate(${start[0]},${start[1]})`)
+    .attr("tabindex",0).attr("role","button")
+    .attr("aria-label", isNote ? `Annotation: ${txt}. Drag to reposition, Delete to remove.`
+                               : `${d.name}, ${d.n} personnel. Drag to reposition.`);
+
+  const h = CHARH, w = txt.length * CHARW;
+  g.append("rect").attr("x",GAP-1).attr("y",-h/2).attr("width",w+2).attr("height",h);
+  g.append("text").attr("x",GAP).attr("y",0).text(txt);
+  g.append("title").text(isNote ? txt : `${d.name} — ${d.n}`);
+  gh.attr("x",start[0]+GAP-1).attr("y",start[1]-h/2).attr("width",w+2).attr("height",h);
+
+  function settle(sx,sy){
+    const ll = PROJ.invert([sx,sy]); if(!ll || isNaN(ll[0])) return;
+    const st = state[key]; if(!st) return;
+    st.lat = Math.round(ll[1]*10000)/10000; st.lon = Math.round(ll[0]*10000)/10000;
+    const far = Math.abs(st.lat-st.orig.lat)>0.0005 || Math.abs(st.lon-st.orig.lon)>0.0005;
+    g.classed("moved",far);
+    gh.style("display",far?null:"none");
+    ln.style("display",far?null:"none")
+      .attr("x1",start[0]).attr("y1",start[1]).attr("x2",sx).attr("y2",sy);
+    refresh();
+  }
+  function here(){
+    const m=/translate\(([-\d.]+),([-\d.]+)\)/.exec(g.attr("transform"));
+    return {x:+m[1], y:+m[2]};
+  }
+
+  g.call(d3.drag()
+    /* Without a subject, d3 puts the group's ORIGIN under the pointer, and the
+       origin is the dot -- which sits GAP to the left of the text you grabbed,
+       so the label jumps right on mousedown. Returning the current origin makes
+       d3 track the pointer's movement instead of its position, so the label
+       stays put until you actually move. */
+    .subject(here)
+    .on("start",function(){d3.select(this).classed("dragging",true).raise();})
+    .on("drag",function(ev){g.attr("transform",`translate(${ev.x},${ev.y})`);settle(ev.x,ev.y);})
+    .on("end",function(){d3.select(this).classed("dragging",false);}));
+
+  g.on("keydown",function(ev){
+    if(isNote && (ev.key==="Delete"||ev.key==="Backspace")){
+      ev.preventDefault(); removeNote(key, g, gh, ln); return;
+    }
+    const step=ev.shiftKey?10:1; const pos=here();
+    let x=pos.x, y=pos.y;
+    if(ev.key==="ArrowLeft")x-=step; else if(ev.key==="ArrowRight")x+=step;
+    else if(ev.key==="ArrowUp")y-=step; else if(ev.key==="ArrowDown")y+=step; else return;
+    ev.preventDefault(); g.attr("transform",`translate(${x},${y})`); settle(x,y);
+  });
+
+  state[key].reset = () => {
+    if(isNote){ removeNote(key, g, gh, ln); return; }     // Reset all clears annotations
+    g.attr("transform",`translate(${start[0]},${start[1]})`).classed("moved",false);
+    gh.style("display","none"); ln.style("display","none");
+    state[key].lat=d.lat; state[key].lon=d.lon;
+  };
+  return g;
+}
+
+function removeNote(key,g,gh,ln){ delete state[key]; g.remove(); gh.remove(); ln.remove(); refresh(); }
+
+function addNote(){
+  const txt = (window.prompt("Annotation text") || "").trim();
+  if(!txt) return;
+  /* Drop it in the open Pacific off the northwest coast: empty, clearly visible,
+     and — the part that matters — it inverts through the lower-48 lobe. Pixels
+     low and to the left fall inside the Alaska or Hawaii invert zones, so a note
+     dropped there would come back with a Hawaii coordinate. Stagger repeats so
+     several notes don't land on top of each other. */
+  const col = noteSeq % 5, row = Math.floor(noteSeq / 5) % 4;
+  const ll = PROJ.invert([170 + col*20, 120 + row*24]);
+  if(!ll || isNaN(ll[0])) return toast("Couldn't place it there");
+  noteSeq += 1;
+  const g = makeLabel({key:"note"+noteSeq, text:txt, lat:+ll[1].toFixed(4), lon:+ll[0].toFixed(4)}, true);
+  if(g) g.node().focus();
+  refresh();
+  toast("Annotation added — drag it into place");
+}
+
 function boot(){
   if (typeof d3 === "undefined"){
     document.getElementById("err").innerHTML =
@@ -178,75 +278,37 @@ function boot(){
      .append("title").text(f => POSTAL[f.properties.id] || f.properties.id);
 
   const layer = svg.append("g");
-  DATA.labels.forEach(d => {
-    const start = PROJ([d.lon, d.lat]);
-    if(!start){ console.warn("off-projection:", d.name); return; }
-    state[d.name] = {lat:d.lat, lon:d.lon, orig:{lat:d.lat, lon:d.lon}};
-    const gh = layer.append("rect").attr("class","ghost").attr("rx",3).style("display","none");
-    const ln = layer.append("line").attr("class","leader").style("display","none");
-    const g  = layer.append("g").attr("class","lbl")
-      .attr("transform",`translate(${start[0]},${start[1]})`)
-      .attr("tabindex",0).attr("role","button")
-      .attr("aria-label",`${d.name}, ${d.n} personnel. Drag to reposition.`);
-    /* Flourish positions a point label from the point marker, not centred on it:
-       text_align "left", text_baseline "middle", drawn at
-       x + (radius + 0.5*point_stroke_width)*scaling + x_padding.
-       Here radius is 0 (point_circle_default_radius), so the number starts
-       GAP to the right of the dot and is centred on it vertically. The dot is
-       never drawn. Keeping the group's transform ON the dot means a drag moves
-       the dot, so invert() returns the coordinate the Points sheet wants. */
-    const txt=String(d.n), h=CHARH;
-    const w=txt.length*CHARW;
-    g.append("rect").attr("x",GAP-1).attr("y",-h/2).attr("width",w+2).attr("height",h);
-    g.append("text").attr("x",GAP).attr("y",0).text(txt);
-    g.append("title").text(`${d.name} — ${d.n}`);
-    gh.attr("x",start[0]+GAP-1).attr("y",start[1]-h/2).attr("width",w+2).attr("height",h);
-
-    function settle(sx,sy){
-      const ll = PROJ.invert([sx,sy]); if(!ll || isNaN(ll[0])) return;
-      const s = state[d.name];
-      s.lat = Math.round(ll[1]*10000)/10000; s.lon = Math.round(ll[0]*10000)/10000;
-      const far = Math.abs(s.lat-s.orig.lat)>0.0005 || Math.abs(s.lon-s.orig.lon)>0.0005;
-      g.classed("moved",far); gh.style("display",far?null:"none");
-      ln.style("display",far?null:"none")
-        .attr("x1",start[0]).attr("y1",start[1]).attr("x2",sx).attr("y2",sy);
-      refresh();
-    }
-    g.call(d3.drag()
-      .on("start",function(){d3.select(this).classed("dragging",true).raise();})
-      .on("drag",function(ev){g.attr("transform",`translate(${ev.x},${ev.y})`);settle(ev.x,ev.y);})
-      .on("end",function(){d3.select(this).classed("dragging",false);}));
-    g.on("keydown",function(ev){
-      const step=ev.shiftKey?10:1;
-      const m=/translate\(([-\d.]+),([-\d.]+)\)/.exec(g.attr("transform"));
-      let x=+m[1], y=+m[2];
-      if(ev.key==="ArrowLeft")x-=step; else if(ev.key==="ArrowRight")x+=step;
-      else if(ev.key==="ArrowUp")y-=step; else if(ev.key==="ArrowDown")y+=step; else return;
-      ev.preventDefault(); g.attr("transform",`translate(${x},${y})`); settle(x,y);
-    });
-    state[d.name].reset = () => {
-      g.attr("transform",`translate(${start[0]},${start[1]})`).classed("moved",false);
-      gh.style("display","none"); ln.style("display","none");
-      state[d.name].lat=d.lat; state[d.name].lon=d.lon;
-    };
-  });
+  LAYER = layer;
+  DATA.labels.forEach(d => makeLabel(d, false));
   refresh();
 }
 function movedList(){return Object.entries(state).filter(([n,s])=>
   Math.abs(s.lat-s.orig.lat)>0.0005||Math.abs(s.lon-s.orig.lon)>0.0005);}
 function refresh(){const m=movedList();
-  d3.select("#count").html(m.length?`<b>${m.length}</b> moved`:"nothing moved yet");
-  d3.select("#out").property("value", m.length?changeText(m):"");}
+  const nn=noteList().length;
+  const bits=[]; if(m.length) bits.push(`<b>${m.length}</b> moved`);
+  if(nn) bits.push(`<b>${nn}</b> annotation${nn>1?"s":""}`);
+  d3.select("#count").html(bits.length?bits.join(" · "):"nothing moved yet");
+  d3.select("#out").property("value", (m.length||noteList().length)?changeText(m):"");}
+function noteList(){return Object.entries(state).filter(([k,s])=>s.note);}
 function changeText(m){
   const l=["# JTF-DC label positions — "+m.length+" moved",
            "# name: new_lat, new_lon   (delta from start)"];
   m.forEach(([n,s])=>l.push(
-    `${n}: ${s.lat.toFixed(4)}, ${s.lon.toFixed(4)}   (${(s.lat-s.orig.lat>=0?"+":"")+(s.lat-s.orig.lat).toFixed(4)}, ${(s.lon-s.orig.lon>=0?"+":"")+(s.lon-s.orig.lon).toFixed(4)})`));
+    `${s.note?"[annotation] "+s.text:n}: ${s.lat.toFixed(4)}, ${s.lon.toFixed(4)}   (${(s.lat-s.orig.lat>=0?"+":"")+(s.lat-s.orig.lat).toFixed(4)}, ${(s.lon-s.orig.lon>=0?"+":"")+(s.lon-s.orig.lon).toFixed(4)})`));
+  const notes=noteList();
+  if(notes.length){
+    l.push("", "# annotations — add these as new rows in the Points sheet");
+    notes.forEach(([k,s])=>l.push(`${s.text}: ${s.lat.toFixed(4)}, ${s.lon.toFixed(4)}`));
+  }
   return l.join("\n");}
 function fullCsv(){const rows=["jurisdiction,latitude,longitude,label,personnel"];
   DATA.labels.slice().sort((a,b)=>a.name.localeCompare(b.name)).forEach(d=>{
     const s=state[d.name]||d, nm=d.name.includes(",")?`"${d.name}"`:d.name;
     rows.push(`${nm},${(s.lat??d.lat).toFixed(4)},${(s.lon??d.lon).toFixed(4)},${d.n},${d.n}`);});
+  noteList().forEach(([k,s])=>{
+    const t=s.text.includes(",")||s.text.includes('"') ? '"'+s.text.replace(/"/g,'""')+'"' : s.text;
+    rows.push(`${t},${s.lat.toFixed(4)},${s.lon.toFixed(4)},${t},`);});
   return rows.join("\n");}
 function toast(msg){const t=d3.select("#toast").text(msg).classed("show",true);
   setTimeout(()=>t.classed("show",false),1600);}
@@ -259,6 +321,7 @@ window.addEventListener("load", ()=>{
     if(!m.length) return toast("Nothing has moved yet");
     copy(changeText(m),`Copied ${m.length} change${m.length>1?"s":""}`);});
   d3.select("#copycsv").on("click",()=>copy(fullCsv(),"Copied full CSV"));
+  d3.select("#addnote").on("click",addNote);
   d3.select("#reset").on("click",()=>{Object.values(state).forEach(s=>s.reset&&s.reset());
     refresh(); toast("Reset");});
 });
